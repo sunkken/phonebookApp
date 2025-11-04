@@ -27,15 +27,18 @@ const errorHandler = (error, request, response, next) => {
 app.use(express.static('dist'))
 app.use(express.json())
 
-
-
-/* app.get('/info', (request, response) => {
+app.get('/info', (request, response, next) => {
   const requestTime = new Date()
-  response.send(`
-    <p>Phonebook has info for ${persons.length} people</p>
-    <p>${requestTime}</p>
-  `)
-}) */
+
+  Person.countDocuments({})
+    .then(count => {
+      response.send(`
+        <p>Phonebook has info for ${count} people</p>
+        <p>${requestTime}</p>
+      `)
+    })
+    .catch(error => next(error))
+})
 
 app.get('/api/persons', (request, response) => {
   Person.find({}).then(persons => {
@@ -89,6 +92,11 @@ app.delete('/api/persons/:id', (request, response, next) => {
     .catch(error => next(error))
 })
 
+const unknownEndpoint = (request, response) => {
+  response.status(404).send({ error: 'unknown endpoint' })
+}
+
+app.use(unknownEndpoint)
 app.use(errorHandler)
 
 const PORT = process.env.PORT
